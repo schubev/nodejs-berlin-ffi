@@ -1,0 +1,37 @@
+\documentclass[aspectratio=169,handout]{beamer}
+\usepackage{array}
+\usepackage{libertine}
+\usepackage{graphicx}
+\usepackage{eurosym}
+\usepackage{tikz}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\renewcommand*\familydefault{\sfdefault}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{title}{fg=black}
+\setbeamercolor{titlelike}{fg=black}
+\setbeamercolor{normal text}{fg=white!20!black}
+\setbeamercolor{alerted text}{fg=normal text.fg}
+\setbeamercolor{itemize item}{fg=gray}
+\setbeamercolor{enumerate item}{fg=gray}
+\setbeamercolor{description item}{fg=normal text.fg}
+\setbeamerfont{alerted text}{family=\bf}
+\setbeamerfont{description item}{family=\bf}
+\usefonttheme[onlymath]{serif}
+
+\usetikzlibrary{positioning}
+\usetikzlibrary{datavisualization}
+\usetikzlibrary{datavisualization.formats.functions}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{decorations.pathmorphing}
+
+\def\doctolibLogo{img/doctolib_black}
+
+\setbeamertemplate{footline} {\large \hspace{1ex}\insertframenumber/\inserttotalframenumber\vspace{1ex}}
+\begin{document}
+\input{content}
+\end{document}
+% vim: set ts=3 sts=3 noet syntax=tex:
