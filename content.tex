@@ -1,3 +1,5 @@
+\tikzstyle{every picture}+=[remember picture]
+
 \title{Building a “native” Windows daemon with Node.JS}
 \subtitle{}
 \author{Victor Schubert <v@schu.be>}
@@ -125,6 +127,87 @@
 		\end{itemize}
 	\end{column}
 	\end{columns}
+\end{frame}
+
+\definecolor{color1}{rgb}{1,0,0}
+\definecolor{color2}{rgb}{0,1,0}
+
+\begin{frame}
+	\frametitle{CommonJS modules}
+
+	\centering
+	\begin{tikzpicture}
+		\node(const) at (0,0)    [anchor=south west] {
+			\tt const data =
+			\tikz[baseline]{\node(data-def)[inner sep=0,anchor=base]{\textcolor{color1}{42}};}
+		};
+		\node(function) at (0,-1) [anchor=south west] {
+			\tt const foo =
+			\tikz[baseline]{\node(foo-def)[inner sep=0,anchor=base]{\textcolor{color2}{(x) => x * data}};}
+			};
+		\node(exports) at (0,-2)  [anchor=south west] {
+			\tt module.exports = \{
+				\tikz[baseline]{\node(data-export)[inner sep=0,anchor=base]{\textcolor{color1}{data}};},
+				\tikz[baseline]{\node(foo-export)[inner sep=0,anchor=base]{\textcolor{color2}{foo}};}
+			\}
+		};
+		\begin{pgfonlayer}{background}
+			\draw<2-> (data-export) edge[->,shorten >=1ex, shorten <=1ex,out=90,in=270,>=stealth,color=color1] (data-def);
+			\draw<2-> (foo-export)  edge[->,shorten >=1ex, shorten <=1ex,out=90,in=270,>=stealth,color=color2] (foo-def);
+		\end{pgfonlayer}
+	\end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Binary code}
+
+	\begin{Verbatim}
+int data = 42;
+
+int foo(int x) {
+  return x * data;
+}
+	\end{Verbatim}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Binary code}
+
+	\centering
+	\begin{tikzpicture}
+		\node(l00) at (0,0)     {\scriptsize\tt 70 6C 65 61 73 65 20 73};
+		\node(l08) at (0,-2ex){\scriptsize\tt 65 6E 64 20 68 65 6C 70};
+		\node(l10) at (0,-4ex){\scriptsize\tt 
+			20 69 E2 80
+			\tikz[baseline]{\node(data-hex)[inner sep=0,anchor=base]{\textcolor{color1}{2A 00 00 00}};}
+		};
+		\node(l18) at (0,-6ex){\scriptsize\tt 99 6D 20 74 72 61 70 70};
+		\node(l20) at (0,-8ex){\scriptsize\tt \textcolor{color2}{65 64 20 69 6E 20 74 68}};
+		\node(l28) at (0,-10ex){\scriptsize\tt \textcolor{color2}{65 20 73 6F 66 74 77 61}};
+		\node(l30) at (0,-12ex){\scriptsize\tt 20 66 61 63 74 6F 72 79};
+		\draw (l00.west |- 0,-14ex) -- (l00.east |- 0,-14ex);
+		\node(l38) at (0,-16ex){\scriptsize\tt \textcolor{color2}{f~ o~ o~ 00 20 00 00 00}};
+		\node(l40) at (0,-18ex){\scriptsize\tt \textcolor{color1}{d~ a~ t~ a~ 14 00 00 00}};
+
+		\node at (l00.base west) [anchor=base east] {\tiny 00};
+		\node at (l08.base west) [anchor=base east] {\tiny 08};
+		\node at (l10.base west) [anchor=base east] {\tiny 10};
+		\node at (l18.base west) [anchor=base east] {\tiny 18};
+		\node at (l20.base west) [anchor=base east] {\tiny 20};
+		\node at (l28.base west) [anchor=base east] {\tiny 28};
+		\node at (l30.base west) [anchor=base east] {\tiny 30};
+		\node at (l38.base west) [anchor=base east] {\tiny 38};
+		\node at (l40.base west) [anchor=base east] {\tiny 40};
+
+		\node at (l00.north east) [anchor=north west] {Data};
+		\node at (l40.base east) [anchor=base west] {Symbol table};
+
+		\begin{pgfonlayer}{background}
+			\draw<2-> (l40) edge[->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color1] (data-hex);
+			\draw<2-> (l38) edge[->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color2] (l20.south east);
+		\end{pgfonlayer}
+	\end{tikzpicture}
+
 \end{frame}
 
 \begin{frame}
