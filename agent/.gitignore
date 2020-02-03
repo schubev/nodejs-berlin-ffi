@@ -1,3 +1,6 @@
 /node_modules/
 /libsimplenotify.so
 *.o
+/index-linux
+/index-macos
+/index-win.exe
