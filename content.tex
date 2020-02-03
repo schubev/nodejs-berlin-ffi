@@ -7,37 +7,44 @@
 
 \frame{\titlepage}
 
-\begin{frame}
-	\frametitle{Who am I?}
-
-	// I’m a fullstack developer at Doctolib GmbH; my team focuses on making
-	sure our online doctor appointment booking service is interoperable with
-	doctors’ specialized software.
-\end{frame}
+%\begin{frame}
+%	\frametitle{Who am I?}
+%
+%	// I’m a fullstack developer at Doctolib GmbH; my team focuses on making
+%	sure our online doctor appointment booking service is interoperable with
+%	doctors’ specialized software.
+%\end{frame}
 
 \begin{frame}
 	\frametitle{Our peculiar use case}
 
 	\begin{itemize}
-		\item Show a screenshot of Doctolib with a quick presentation of what it does.
-		\item Show a screenshot of some PMS with a quick presentation of what it does.
-		\item Zipper in the middle runs on the doctors’ machine and synchronizes those.
+		\item Specialized software runs on doctors’ machines.
+		\item Doctolib is open in their web browser.
+		\item We need to synchronize data and automate data entry.
 	\end{itemize}
+
+	% Define PMS: I will use this word a lot because of habit.
+	% Avoid double data entry.
 \end{frame}
 
 \begin{frame}
-	\frametitle{Let’s get things in order}
+	\frametitle{Overview}
 
 	\centering
 	\begin{tikzpicture}[node distance=0.9,text height=.90em,text depth=.30em]
-		\node (inet) [rectangle]                 {Doctolib};
-		\node (flar) [minimum width=11em,draw,rectangle,below=of inet] {Browser extension};
+		\node<1-2> (flar) [minimum width=11em,draw,rectangle] {Browser extension};
+		\node (top) [rectangle,above=of flar]{~};
+		\node<1> (inet) [rectangle,above=of flar] {Doctolib website};
 		\node (rora) [minimum width=11em,draw,rectangle,below=of flar] {Daemon};
 		\node (psql) [minimum width=11em,draw,rectangle,below=of rora] {Specialized software};
-		\draw (inet) edge[<->] node[anchor=west] {HTTPS} (flar);
-		\draw (flar) edge[<->] node[anchor=west] {Native messaging} (rora);
+		\draw<1> (inet) edge[<->] node[anchor=west] {HTTPS} (flar);
+		\draw (flar) edge[<->] node(nmsg)[anchor=west] {Native messaging} (rora);
 		\draw (rora) edge[<->] node[anchor=west] {AutoIT} (psql);
+		\useasboundingbox (psql.south west) rectangle (top.north -| nmsg.east);
 	\end{tikzpicture}
+
+	% The talk will unfold from top to bottom.
 \end{frame}
 
 \begin{frame}
@@ -53,6 +60,19 @@
 
 \begin{frame}
 	\frametitle{Native messaging?}
+
+	\begin{tikzpicture}
+		\node(extension) [rectangle,draw] { Extension };
+		\path (extension.north west)
+			+(-2ex,2ex) node(browser) [anchor=south west] { Browser };
+		\path (browser.north west) coordinate(br-top-left);
+		\path (extension.south east) +(2ex,-2ex) coordinate(br-bottom-right);
+		\draw (browser.north west) rectangle (br-bottom-right);
+		\path (br-bottom-right) +(12em,0em) coordinate(pr-bottom-right);
+		\path (br-top-left) +(12em,0em) coordinate(pr-top-left);
+		\draw (pr-top-left) rectangle (pr-bottom-right);
+		\draw[line width=2pt,->,>=stealth] (br-bottom-right |- br-top-left) +(0em,-1em) coordinate(spawn-start) -- node[above]{\bfseries SPAWN!} (pr-top-left |- spawn-start);
+	\end{tikzpicture}
 
 	\begin{itemize}
 		\item The browser spawns and manages a process.

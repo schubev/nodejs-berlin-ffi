@@ -1,7 +1,6 @@
-all: slides handout
+all: slides
 
 slides: slides.pdf
-handout: handout.pdf
 
 handout.pdf: handout_slides.pdf
 	pdflatex handout
@@ -14,6 +13,6 @@ clean:
 	rm -f *.aux *.log *.nav *.out *.snm *.toc *.vrb
 
 fclean: clean
-	rm -f slides.pdf handout.pdf handout_slides.pdf
+	rm -f slides.pdf
 
 re: fclean all
