@@ -4,15 +4,19 @@
 #include <libnotify/notification.h>
 #include <libnotify/notify.h>
 
-int main(void) {
+int show_notification(const char *body) {
   if (notify_init("Native messaging dummy agent") == FALSE) {
     fprintf(stderr, "failed to initialize libnotify\n");
-    return EXIT_FAILURE;
+    return -1;
   }
   NotifyNotification *notification =
-      notify_notification_new("I got run!", NULL, NULL);
+      notify_notification_new("I got run!", body, NULL);
   notify_notification_set_timeout(notification, NOTIFY_EXPIRES_DEFAULT);
   GError *error = NULL;
-  notify_notification_show(notification, &error);
+  if (notify_notification_show(notification, &error) == FALSE) {
+    fprintf(stderr, "failed to show notification\n");
+    return -2;
+  }
   notify_uninit();
+  return 0;
 }
