@@ -13,7 +13,7 @@ const nativeMessaging = require('chrome-native-messaging')
 process.stdin
   .pipe(new nativeMessaging.Input())
   .pipe(new nativeMessaging.Transform((message, push, done) => {
-    if (message.action === 'notify') {
+    if (message.action === 'notify')
       libsimplenotify.show_notification(message.text)
     done()
   }))
