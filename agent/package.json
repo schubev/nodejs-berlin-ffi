@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chrome-native-messaging": "^0.2.0",
     "ffi": "^2.3.0"
   },
   "devDependencies": {

@@ -1,46 +1,34 @@
 \tikzstyle{every picture}+=[remember picture]
 
-\title{Building a “native” Windows daemon with Node.JS}
+\title{Connecting a website to native software with Node.JS}
 \subtitle{}
 \author{Victor Schubert <v@schu.be>}
 \date{2020--02--04}
 
 \frame{\titlepage}
 
-%\begin{frame}
-%	\frametitle{Who am I?}
-%
-%	// I’m a fullstack developer at Doctolib GmbH; my team focuses on making
-%	sure our online doctor appointment booking service is interoperable with
-%	doctors’ specialized software.
-%\end{frame}
-
 \begin{frame}
 	\frametitle{Our peculiar use case}
 
-	\begin{itemize}
-		\item Specialized software runs on doctors’ machines.
-		\item Doctolib is open in their web browser.
-		\item We need to synchronize data and automate data entry.
-	\end{itemize}
-
-	% Define PMS: I will use this word a lot because of habit.
-	% Avoid double data entry.
+	\centering
+	\Large
+	\href{run:./init-patient.mkv}{Start video}
 \end{frame}
 
 \begin{frame}
 	\frametitle{Overview}
 
 	\centering
+	\Large
 	\begin{tikzpicture}[node distance=0.9,text height=.90em,text depth=.30em]
-		\node<1-2> (flar) [minimum width=11em,draw,rectangle] {Browser extension};
+		\node (flar) [minimum width=11em,draw,rectangle] {Browser extension};
 		\node (top) [rectangle,above=of flar]{~};
-		\node<1> (inet) [rectangle,above=of flar] {Doctolib website};
+		\node (inet) [rectangle,above=of flar] {Doctolib webpage};
 		\node (rora) [minimum width=11em,draw,rectangle,below=of flar] {Daemon};
 		\node (psql) [minimum width=11em,draw,rectangle,below=of rora] {Specialized software};
-		\draw<1> (inet) edge[<->] node[anchor=west] {HTTPS} (flar);
-		\draw (flar) edge[<->] node(nmsg)[anchor=west] {Native messaging} (rora);
-		\draw (rora) edge[<->] node[anchor=west] {AutoIT} (psql);
+		\draw (inet) edge[<->,>=stealth] node[anchor=west] {postMessage} (flar);
+		\draw (flar) edge[<->,>=stealth] node(nmsg)[anchor=west] {Native messaging} (rora);
+		\draw (rora) edge[<->,>=stealth] node[anchor=west] {AutoIT} (psql);
 		\useasboundingbox (psql.south west) rectangle (top.north -| nmsg.east);
 	\end{tikzpicture}
 
@@ -50,17 +38,21 @@
 \begin{frame}
 	\frametitle{Web extensions, a primer}
 
+	\Large
+	Web extensions are written in JS and composed of
 	\begin{itemize}
-		\item Written with standard browser Javascript.
-		\item Now largely portable across browsers.
-		\item {\em Very} sandboxed.
-		\item Can communicate with local processes with {\em Native messaging}.
+		\item Content scripts running in tabs, with access to the DOM.
+		\item Background scripts running separate from tabs.
+		\item The manifest file which ties everything together.
 	\end{itemize}
 \end{frame}
+
 
 \begin{frame}
 	\frametitle{Native messaging?}
 
+	\centering
+	\LARGE
 	\begin{tikzpicture}
 		\node(extension) [rectangle,draw] { Extension };
 		\path (extension.north west)
@@ -72,90 +64,140 @@
 		\path (br-top-left) +(12em,0em) coordinate(pr-top-left);
 		\draw (pr-top-left) rectangle (pr-bottom-right);
 		\draw[line width=2pt,->,>=stealth] (br-bottom-right |- br-top-left) +(0em,-1em) coordinate(spawn-start) -- node[above]{\bfseries SPAWN!} (pr-top-left |- spawn-start);
+		\node(process)  at ($(pr-top-left)!0.5!(pr-bottom-right)$)[anchor=center] {Process};
+		\draw[line width=1pt,<->,>=stealth] (extension) -- node[below]{JSON} (extension -| pr-top-left);
 	\end{tikzpicture}
 
-	\begin{itemize}
-		\item The browser spawns and manages a process.
-		\item It sends messages through the process’ standard input.
-		\item It receives messages from the process’ standard output.
-		\item Messages use a JSON-based protocol.
-		\item Not harder than \texttt{postMessage}.
-	\end{itemize}
+	\vspace{1em}
+	\large
+	\texttt{npm install chrome-native-messaging}
+
+	% \begin{itemize}
+	% 	\item The browser spawns and manages a process.
+	% 	\item It sends messages through the process’ standard input.
+	% 	\item It receives messages from the process’ standard output.
+	% 	\item Messages use a JSON-based protocol.
+	% 	\item Not harder than \texttt{postMessage}.
+	% \end{itemize}
 \end{frame}
 
 \begin{frame}
-	\frametitle{The Zipper daemon}
+	\frametitle{So how is it all deployed?}
 
-	\begin{itemize}
-		\item Receives messages from the web extension.
-		\item Takes action upon receiving these messages.
-		\item Sends back messages with info and results.
-		\item Directly reads files.
-		\item Simulates user input on neighbouring software using AutoIT.
-	\end{itemize}
+	\centering
+	\Large
+	\begin{tikzpicture}[
+			every node/.style={
+				rectangle,
+				draw,
+				minimum width=5em,
+				minimum height=3em,
+				text width=5em,
+				align=center,
+				fill=black,
+			},
+			every edge/.style={
+				>=stealth,
+				draw,
+				line width=2pt,
+			}]
+		\node(nodejs) at (-8em,3em)  {Node.JS interpreter};
+		\node(mainjs) at (-8em,-3em) {JS script};
+		\node(binary) at (8em,0em)   {Binary};
+		\path (nodejs) edge[->,out=-20,in=180] (binary);
+		\path (mainjs) edge[->,out=20,in=180] (binary);
+		\node(pkg)    at (0em,0em)   {PKG};
+	\end{tikzpicture}
 \end{frame}
 
 \begin{frame}
+	\frametitle{Why use PKG?}
+
+	\Large
+	\begin{itemize}
+		\item You don’t need to install Node.JS.
+		\item You get cross-compilation for free.
+		\item You can sign the binary.
+	\end{itemize}
+\end{frame}
+
+% \begin{frame}
+% 	\frametitle{The Zipper daemon}
+% 
+% 	// Schema showing messages flowing from the website through ZW and to
+% 	ZD, and ZD doing the actions.
+% 	% \begin{itemize}
+% 	% 	\item Receives messages from the web extension.
+% 	% 	\item Takes action upon receiving these messages.
+% 	% 	\item Sends back messages with info and results.
+% 	% 	\item Directly reads files.
+% 	% 	\item Simulates user input on neighbouring software using AutoIT.
+% 	% \end{itemize}
+% \end{frame}
+
+\begin{frame}[fragile]
 	\frametitle{What’s AutoIT?}
 
-	\begin{itemize}
-		\item Scripting language for GUI automation.
-		\item It is also a library!
-		\item But a DLL library.
-		\item There’s a basic binding, but not sufficient.
-	\end{itemize}
-\end{frame}
-
-\begin{frame}
-	\frametitle{A picture speaks a thousand words}
-
-	// Demo of AutoIT automation. Perhaps an OPEN\_PATIENT? Or just an AutoIT
-	promotional video would suffice.
+	\Large
+	\begin{verbatim}
+WinActivate("Mozilla Firefox") ;
+WinWaitActive("Mozilla Firefox") ;
+Send("{HOME}") ;
+Send("https://example.com") ;
+Send("{ENTER}") ;
+	\end{verbatim}
+	% \begin{itemize}
+	% 	\item Scripting language for GUI automation.
+	% 	\item It is also a library!
+	% 	\item But a DLL library.
+	% 	\item There’s a basic binding, but not sufficient.
+	% \end{itemize}
 \end{frame}
 
 \begin{frame}
 	\frametitle{What’s a DLL again?}
 
+	\Large
 	\begin{itemize}
-		\item A {\em Dynamic Link Library}, duh…
+		\item A {\em Dynamic Link Library}.
 		\item Contains code and data to be loaded and run by a program at runtime.
-		\item Code and data are indexed by symbols.
 		\item That’s not very different from how CommonJS imports work.
 	\end{itemize}
 \end{frame}
 
-\begin{frame}
-	\frametitle{DLLs aren’t too different from CommonJS modules actually}
+% \begin{frame}
+% 	\frametitle{DLLs aren’t too different from CommonJS modules actually}
+% 
+% 	\begin{columns}
+% 	\begin{column}{0.5\textwidth}
+% 		A DLL…
+% 
+% 		\begin{itemize}
+% 			\item Has a symbol table.
+% 			\item String keys in the symbol table point to functions and variables.
+% 			\item Is loaded and cached/memoized by the OS.
+% 		\end{itemize}
+% 	\end{column}
+% 	\begin{column}{0.5\textwidth}
+% 		A CommonJS module…
+% 
+% 		\begin{itemize}
+% 			\item Has an \texttt{exports} object.
+% 			\item String keys in the \texttt{exports} object reference functions and variables.
+% 			\item Is loaded and cached/memoized by Node.JS.
+% 		\end{itemize}
+% 	\end{column}
+% 	\end{columns}
+% \end{frame}
 
-	\begin{columns}
-	\begin{column}{0.5\textwidth}
-		A DLL…
-
-		\begin{itemize}
-			\item Has a symbol table.
-			\item String keys in the symbol table point to functions and variables.
-			\item Is loaded and cached/memoized by the OS.
-		\end{itemize}
-	\end{column}
-	\begin{column}{0.5\textwidth}
-		A CommonJS module…
-
-		\begin{itemize}
-			\item Has an \texttt{exports} object.
-			\item String keys in the \texttt{exports} object reference functions and variables.
-			\item Is loaded and cached/memoized by Node.JS.
-		\end{itemize}
-	\end{column}
-	\end{columns}
-\end{frame}
-
-\definecolor{color1}{rgb}{1,0,0}
-\definecolor{color2}{rgb}{0,1,0}
+\definecolor{color1}{rgb}{1.000,0.604,0.447}
+\definecolor{color2}{rgb}{0.447,0.898,1.000}
 
 \begin{frame}
 	\frametitle{CommonJS modules}
 
 	\centering
+	\Large
 	\begin{tikzpicture}
 		\node(const) at (0,0)    [anchor=south west] {
 			\tt const data =
@@ -172,8 +214,8 @@
 			\}
 		};
 		\begin{pgfonlayer}{background}
-			\draw<2-> (data-export) edge[->,shorten >=1ex, shorten <=1ex,out=90,in=270,>=stealth,color=color1] (data-def);
-			\draw<2-> (foo-export)  edge[->,shorten >=1ex, shorten <=1ex,out=90,in=270,>=stealth,color=color2] (foo-def);
+			\draw (data-export) edge[line width=1pt,->,shorten >=1ex, shorten <=1ex,out=90,in=0,>=stealth,color=color1] (data-def);
+			\draw (foo-export)  edge[line width=1pt,->,shorten >=1ex, shorten <=1ex,out=90,in=270,>=stealth,color=color2] (foo-def);
 		\end{pgfonlayer}
 	\end{tikzpicture}
 \end{frame}
@@ -181,6 +223,7 @@
 \begin{frame}[fragile]
 	\frametitle{Binary code}
 
+	\LARGE
 	\begin{Verbatim}
 int data = 42;
 
@@ -194,37 +237,38 @@ int foo(int x) {
 	\frametitle{Binary code}
 
 	\centering
+	\LARGE
 	\begin{tikzpicture}
-		\node(l00) at (0,0)     {\scriptsize\tt 70 6C 65 61 73 65 20 73};
-		\node(l08) at (0,-2ex){\scriptsize\tt 65 6E 64 20 68 65 6C 70};
-		\node(l10) at (0,-4ex){\scriptsize\tt 
+		\node(l00) at (0,0)     {\Large\tt 70 6C 65 61 73 65 20 73};
+		\node(l08) at (0,-2ex){\Large\tt 65 6E 64 20 68 65 6C 70};
+		\node(l10) at (0,-4ex){\Large\tt 
 			20 69 E2 80
 			\tikz[baseline]{\node(data-hex)[inner sep=0,anchor=base]{\textcolor{color1}{2A 00 00 00}};}
 		};
-		\node(l18) at (0,-6ex){\scriptsize\tt 99 6D 20 74 72 61 70 70};
-		\node(l20) at (0,-8ex){\scriptsize\tt \textcolor{color2}{65 64 20 69 6E 20 74 68}};
-		\node(l28) at (0,-10ex){\scriptsize\tt \textcolor{color2}{65 20 73 6F 66 74 77 61}};
-		\node(l30) at (0,-12ex){\scriptsize\tt 20 66 61 63 74 6F 72 79};
+		\node(l18) at (0,-6ex){\Large\tt 99 6D 20 74 72 61 70 70};
+		\node(l20) at (0,-8ex){\Large\tt \textcolor{color2}{65 64 20 69 6E 20 74 68}};
+		\node(l28) at (0,-10ex){\Large\tt \textcolor{color2}{65 20 73 6F 66 74 77 61}};
+		\node(l30) at (0,-12ex){\Large\tt 20 66 61 63 74 6F 72 79};
 		\draw (l00.west |- 0,-14ex) -- (l00.east |- 0,-14ex);
-		\node(l38) at (0,-16ex){\scriptsize\tt \textcolor{color2}{f~ o~ o~ 00 20 00 00 00}};
-		\node(l40) at (0,-18ex){\scriptsize\tt \textcolor{color1}{d~ a~ t~ a~ 14 00 00 00}};
+		\node(l38) at (0,-16ex){\Large\tt \textcolor{color2}{f~ o~ o~ 00 20 00 00 00}};
+		\node(l40) at (0,-18ex){\Large\tt \textcolor{color1}{d~ a~ t~ a~ 14 00 00 00}};
 
-		\node at (l00.base west) [anchor=base east] {\tiny 00};
-		\node at (l08.base west) [anchor=base east] {\tiny 08};
-		\node at (l10.base west) [anchor=base east] {\tiny 10};
-		\node at (l18.base west) [anchor=base east] {\tiny 18};
-		\node at (l20.base west) [anchor=base east] {\tiny 20};
-		\node at (l28.base west) [anchor=base east] {\tiny 28};
-		\node at (l30.base west) [anchor=base east] {\tiny 30};
-		\node at (l38.base west) [anchor=base east] {\tiny 38};
-		\node at (l40.base west) [anchor=base east] {\tiny 40};
+		\node at (l00.base west) [anchor=base east] {\small 00};
+		\node at (l08.base west) [anchor=base east] {\small 08};
+		\node at (l10.base west) [anchor=base east] {\small 10};
+		\node at (l18.base west) [anchor=base east] {\small 18};
+		\node at (l20.base west) [anchor=base east] {\small 20};
+		\node at (l28.base west) [anchor=base east] {\small 28};
+		\node at (l30.base west) [anchor=base east] {\small 30};
+		\node at (l38.base west) [anchor=base east] {\small 38};
+		\node at (l40.base west) [anchor=base east] {\small 40};
 
 		\node at (l00.north east) [anchor=north west] {Data};
 		\node at (l40.base east) [anchor=base west] {Symbol table};
 
 		\begin{pgfonlayer}{background}
-			\draw<2-> (l40) edge[->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color1] (data-hex);
-			\draw<2-> (l38) edge[->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color2] (l20.south east);
+			\draw (l40) edge[line width=1pt,->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color1] (data-hex);
+			\draw (l38) edge[line width=1pt,->,shorten >=1ex, shorten <=1ex,out=0,in=0,>=stealth,color=color2] (l20.south east);
 		\end{pgfonlayer}
 	\end{tikzpicture}
 
@@ -261,58 +305,40 @@ int foo(int x) {
 \begin{frame}
 	\frametitle{So how do we call that native function with ffi?}
 
-	// Code sample, maybe from Zipper Desktop so that we stay on-topic? Or a
-	livecoding session. This can be demonstrated rather quickly with a dummy C
-	library.
+	\centering
+	\LARGE
+	Let’s build it together!
 \end{frame}
 
 \begin{frame}
 	\frametitle{What when the DLL isn’t thread-safe?}
 
-	That’s a topic for an entire talk, or maybe a blog post, such as this one!
-
-	https://medium.com/doctolib/calling-into-thread-unsafe-dlls-with-node-ffi-1ef83806a50c
-
-	// Add a QR-Code to the article.
+	\Large
+	That’s a topic for an entire talk, or maybe a blog post, such as \href{https://medium.com/doctolib/calling-into-thread-unsafe-dlls-with-node-ffi-1ef83806a50c}{this one you’ll find on Doctolib’s Medium blog}!
 \end{frame}
 
 \begin{frame}
-	\frametitle{So how is it all deployed?}
+	\frametitle{Want more?}
 
-	\begin{itemize}
-		\item It is all bundled as a single binary using Zeit’s PKG.
-		\item PKG straps all of your code onto a modified Node.JS binary, to form
-			a single file.
-		\item Our daemon has custom logic to update itself.
-		\item You can use Zeit to easily deploy a web server with all of its
-			assets.
-	\end{itemize}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Doctolib is recruiting!}
-
-	\centering
-
-	https://careers.doctolib.de/
-
-	// Add a QR-Code.
-\end{frame}
-
-\begin{frame}
-	\frametitle{Where to find me?}
-
-	\centering
-
-	\begin{tabular}{>{\bfseries}rl}
-		\hspace{0.5\textwidth}&\hspace{0.5\textwidth}\\
+	\begin{center}
+	\Large
+	\begin{tabular}{>{\bfseries}ll}
 		Name & Victor Schubert \\
 		E-mail & v@schu.be \\
-		Personal Github & schubev \\
-		Company Github & doctolib \\
+		Github & schubev \\
 	\end{tabular}
+		\vspace{1em}
+	\newline
+		\begin{tikzpicture}\draw (0,0) -- (6,0);\end{tikzpicture}
+	\end{center}
 
-	\vspace{1em}
-	// Add a QR-Code and link to my own website. There I will also host the
-	slides.
+	\large
+	You’ll find more content from Doctolib there:
+	\begin{itemize}
+	\item Our blog at \url{https://medium.com/doctolib}
+	\item A tech newsletter you can subscribe to at \url{https://bit.ly/DoctoTechLife}
+	\item Job openings at \url{https://careers.doctolib.com}
+	\item All the code and slides for this talk at \url{https://github.com/schubev/nodejs-berlin}
+	\end{itemize}
+
 \end{frame}

@@ -1,0 +1,22 @@
+{
+	"name": "Notification DIY",
+	"version": "0.0.1",
+	"description": "Pop libnotify notifications",
+	"manifest_version": 2,
+	"permissions": ["nativeMessaging", "tabs", "http://*/*", "https://*/*"],
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": false
+	},
+	"applications": {
+		"gecko": {
+			"id": "simplenotify@doctolib.com"
+		}
+	},
+	"content_scripts": [
+		{
+			"matches": ["http://*/*"],
+			"js": ["content.js"]
+		}
+	]
+}
